@@ -89,7 +89,7 @@ e avalia a viabilidade como um investidor-anjo. Tudo fica salvo no histórico.
  5. Ver relatório       → mostra o relatório completo de uma validação salva.
  6. Comparar ideias     → escolhe 2+ validações do histórico e ranqueia qual é
                           a mais promissora.
- 7. Exportar            → salva uma validação em Markdown ou JSON.
+ 7. Exportar            → salva uma validação em Markdown, JSON ou HTML.
 
 [bold]Dica:[/bold] ao validar, escolha uma vertical (SaaS, E-commerce, Foodtech, IA,
 Marketplace ou Fintech) para uma análise mais especializada. Use 0 para Geral.

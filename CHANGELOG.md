@@ -4,6 +4,13 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [3.3.1] — 2026-08-02
+
+### Adicionado
+
+- Artefato HTML também para **Ver Relatório** (opção 5).
+- **Exportar** (opção 7) agora aceita o formato **HTML** além de Markdown/JSON.
+
 ## [3.3.0] — 2026-08-02
 
 ### Adicionado

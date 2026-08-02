@@ -26,7 +26,7 @@ _MENU_SECOES = [
             ("4", "Ver Histórico de Sessões", "yellow"),
             ("5", "Ver Relatório Completo de uma Validação", "magenta"),
             ("6", "Comparar Ideias do Histórico", "cyan"),
-            ("7", "Exportar Validação (MD/JSON)", "blue"),
+            ("7", "Exportar Validação (MD/JSON/HTML)", "blue"),
         ],
     ),
     (
@@ -109,7 +109,7 @@ def ask_session_ids_for_compare() -> list:
 
 
 def ask_export_format() -> str:
-    return Prompt.ask("Formato de exportação (md/json)?", choices=["md", "json"], default="md")
+    return Prompt.ask("Formato de exportação (md/json/html)?", choices=["md", "json", "html"], default="md")
 
 
 def ask_existing_report(ideia: str) -> bool:

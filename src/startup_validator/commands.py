@@ -121,11 +121,19 @@ def cmd_relatorio(agent: Agent) -> None:
     alvo = _prompt_for_session(agent, "relatório")
     if alvo is None:
         return
-    relatorio = history.get_full_report(agent, alvo["id"])
-    if relatorio is None:
+    modelo = history.get_full_report_model(agent, alvo["id"])
+    if modelo is not None:
+        ui.print_report(modelo.to_panel_text())
+        _oferecer_artefato(f"Validação — {alvo['id_curto']}", modelo.to_markdown(), "relatorio")
+        return
+
+    # Fallback: texto bruto salvo na sessão.
+    texto = history.get_full_report(agent, alvo["id"])
+    if texto is None:
         ui.print_report_not_found(alvo["id_curto"])
     else:
-        ui.print_report(relatorio)
+        ui.print_report(texto)
+        _oferecer_artefato(f"Validação — {alvo['id_curto']}", texto, "relatorio")
 
 
 async def cmd_comparar(agent: Agent) -> None:
@@ -157,7 +165,7 @@ async def cmd_comparar(agent: Agent) -> None:
 
 
 def cmd_exportar(agent: Agent) -> None:
-    """Exporta uma validação em Markdown ou JSON."""
+    """Exporta uma validação em Markdown, JSON ou HTML."""
     alvo = _prompt_for_session(agent, "exportação")
     if alvo is None:
         return
@@ -167,6 +175,13 @@ def cmd_exportar(agent: Agent) -> None:
         return
 
     formato = ui.ask_export_format()
+    if formato == "html":
+        caminho = artifacts.salvar_artefato(
+            f"Validação — {alvo['id_curto']}", modelo.to_markdown(), "relatorio", abrir=False
+        )
+        ui.print_info(f"✅ Exportado para [bold]{caminho}[/bold]")
+        return
+
     conteudo, ext = services.export_validation(modelo, formato)
     caminho = services.default_export_path(ext)
     Path(caminho).write_text(conteudo, encoding="utf-8")
