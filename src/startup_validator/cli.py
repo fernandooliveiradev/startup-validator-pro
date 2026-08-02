@@ -134,8 +134,9 @@ async def main_app() -> None:
             if len(modelos) < 2:
                 ui.print_error("Compare pelo menos 2 validações válidas.")
                 continue
+            comparador = agent_factory.build_free_text_agent()
             ui.print_info("⚖️ Gerando comparativo...")
-            resultado = await asyncio.to_thread(services.compare_ideas, analista, modelos)
+            resultado = await asyncio.to_thread(services.compare_ideas, comparador, modelos)
             ui.print_report(resultado)
 
         elif opcao == "7":

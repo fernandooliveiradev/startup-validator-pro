@@ -61,3 +61,27 @@ def build_agent(
         markdown=False,
         stream=True,
     )
+
+
+def build_free_text_agent(
+    db: Optional[Any] = None,
+    model_id: Optional[str] = None,
+    max_tokens: Optional[int] = None,
+) -> Agent:
+    """Constrói um agente sem schema estruturado, para respostas em texto livre
+    (ex.: comparativo de ideias), evitando que o resultado seja forçado ao
+    formato `DetailedValidation`."""
+    return Agent(
+        name="Analista Comparador",
+        model=build_model(model_id=model_id, max_tokens=max_tokens),
+        tools=[TavilyTools()],
+        instructions=[
+            "Você é um investidor-anjo sênior e brutalmente honesto.",
+            "Sempre use a ferramenta Tavily para buscar dados REAIS de mercado e concorrentes antes de responder.",
+            "Responda em português, em texto corrido e bem estruturado.",
+            "Seja objetivo e acionável.",
+        ],
+        db=db,
+        markdown=False,
+        stream=False,
+    )
