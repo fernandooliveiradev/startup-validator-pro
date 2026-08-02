@@ -21,7 +21,9 @@ APP_VERSION = __version__
 APP_TAGLINE = "Validação de ideias com DeepSeek V4"
 
 MODEL_ID = os.getenv("MODEL_ID", "deepseek-v4-flash")
+FALLBACK_MODEL_ID = os.getenv("FALLBACK_MODEL_ID", "deepseek-v4-pro")
 REASONING_EFFORT = os.getenv("REASONING_EFFORT", "high")
+MAX_TOKENS = os.getenv("MAX_TOKENS", "8192")
 # Habilita o "thinking" do DeepSeek (formato OpenAI: {"thinking": {"type": "enabled"}}).
 THINKING_ENABLED = os.getenv("THINKING_ENABLED", "true").lower() in {"1", "true", "yes"}
 

@@ -4,15 +4,35 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
-## [3.1.0] — 2026-08-01
+## [3.1.0] — 2026-08-02
 
 ### Adicionado
 
-- Nova opção no menu (3) para visualizar o **relatório completo** de uma validação
+- **Streaming** no terminal: raciocínio, chamadas de ferramenta (Tavily) e relatório exibidos
+  em tempo real via Rich `Live`.
+- **Fallback automático de modelo**: em falha, troca de `deepseek-v4-flash` para `deepseek-v4-pro`.
+- **Saída estruturada ampliada**: `score`, `nivel_risco`, `cac_estimado`, `mvp_minimo`,
+  `proximos_passos` e `referencias` no schema.
+- **Verticais especializadas** (`verticals.py`): SaaS, E-commerce, Foodtech, IA, Marketplace e Fintech.
+- **Refinamento iterativo**: refina a ideia em rodadas com base nos pontos fracos.
+- **Pitch Deck Review**: avaliação de pitch no papel de investidor-anjo.
+- **Comparativo de ideias**: ranqueia validações do histórico da mais para a menos promissora.
+- **Cache de validação**: evita re-validar ideias já analisadas (match fuzzy por resumo).
+- **Exportação** de relatório em Markdown ou JSON.
+- **Testes unitários** (pytest) para `schemas`, `services` e `verticals`.
+- Variável de configuração `MAX_TOKENS` e `FALLBACK_MODEL_ID`.
+
+### Alterado
+
+- Menu expandido para 8 opções.
+
+### Adicionado (08-01)
+
+- Nova opção no menu para visualizar o **relatório completo** de uma validação
   salva no histórico (reconstruído a partir do JSON persistido).
 - Licença **MIT** (`LICENSE`) e metadados correspondentes no `pyproject.toml`.
 
-### Removido
+### Removido (08-01)
 
 - Aviso de segurança sobre o `.env` no README.
 
