@@ -4,6 +4,16 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [3.2.1] — 2026-08-02
+
+### Corrigido
+
+- **Bug grave no dispatcher do menu**: as opções `1` (Validar), `2` (Refinar) e `6` (Comparar)
+  eram chamadas sem o argumento `agent`, lançando `TypeError` na execução. Agora o dispatch
+  repassa `agent` corretamente aos handlers que o exigem.
+- Teste de regressão adicionado (`test_cli.py`) para garantir que cada handler recebe os
+  argumentos certos.
+
 ## [3.2.0] — 2026-08-02
 
 ### Adicionado

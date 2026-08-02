@@ -30,8 +30,8 @@ async def main_app() -> None:
     # Handlers podem ser síncronos ou assíncronos; `_run` normaliza ambos.
     handlers = {
         "0": commands.cmd_ajuda,
-        "1": commands.cmd_validar,
-        "2": commands.cmd_refinar,
+        "1": _make_async(commands.cmd_validar, analista),
+        "2": _make_async(commands.cmd_refinar, analista),
         "3": commands.cmd_pitch,
         "4": _make_sync(commands.cmd_historico, analista),
         "5": _make_sync(commands.cmd_relatorio, analista),
