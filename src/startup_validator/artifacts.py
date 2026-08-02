@@ -15,8 +15,7 @@ from startup_validator import config
 from startup_validator.schemas import DetailedValidation
 
 _TAILWIND_CDN = "https://cdn.tailwindcss.com"
-_LUCIDE_CDN = "https://unpkg.com/lucide@latest"
-_LUCIDE_CSS = "https://unpkg.com/lucide@latest/dist/umd/lucide.min.css"
+_LUCIDE_CDN = "https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"
 
 # Cor do fundo escuro (quase preto).
 _DARK_BG = "#0a0a0a"
@@ -212,7 +211,6 @@ def _wrap(title: str, corpo_html: str) -> str:
   <title>{_escape(title)}</title>
   <script src="{_TAILWIND_CDN}"></script>
   <script src="{_LUCIDE_CDN}"></script>
-  <link rel="stylesheet" href="{_LUCIDE_CSS}" />
   <script>
     tailwind.config = {{
       darkMode: 'class'
