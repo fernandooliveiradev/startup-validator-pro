@@ -153,6 +153,11 @@ async def stream_validation(agent: Agent, ideia: str):
             nome = getattr(evento, "event", "")
             if nome in ("RunContent", "RunIntermediateContent", "RunCompleted"):
                 c = getattr(evento, "content", None)
+                # O raciocínio do DeepSeek chega dentro do RunContent, não em
+                # evento separado. Emitimos como "thinking" em tempo real.
+                rc = getattr(evento, "reasoning_content", None)
+                if rc:
+                    yield {"tipo": "thinking", "conteudo": rc}
                 if isinstance(c, str) and c.strip():
                     deltas.append(c)
                     yield {"tipo": "content", "conteudo": c}
@@ -203,6 +208,9 @@ async def stream_free_text(agent: Agent, ideia: str):
             nome = getattr(evento, "event", "")
             if nome in ("RunContent", "RunIntermediateContent"):
                 c = getattr(evento, "content", None)
+                rc = getattr(evento, "reasoning_content", None)
+                if rc:
+                    yield {"tipo": "thinking", "conteudo": rc}
                 if isinstance(c, str) and c.strip():
                     deltas.append(c)
                     yield {"tipo": "content", "conteudo": c}
