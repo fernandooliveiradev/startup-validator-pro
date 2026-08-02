@@ -15,6 +15,7 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 TMP_DIR = ROOT_DIR / "tmp"
 DB_FILE = TMP_DIR / "validations.db"
 SESSION_TABLE = "validations"
+ARTIFACTS_DIR = ROOT_DIR / "artefatos"
 
 APP_NAME = "Startup Validator Pro"
 APP_VERSION = __version__
@@ -31,6 +32,7 @@ THINKING_ENABLED = os.getenv("THINKING_ENABLED", "true").lower() in {"1", "true"
 def ensure_dirs() -> None:
     """Cria diretórios de runtime, se necessário."""
     TMP_DIR.mkdir(exist_ok=True)
+    ARTIFACTS_DIR.mkdir(exist_ok=True)
 
 
 def get_deepseek_api_key() -> str | None:

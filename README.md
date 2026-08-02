@@ -22,6 +22,9 @@ O usuário digita uma ideia de startup e o agente:
    - Fontes pesquisadas
 4. **Salva tudo localmente** (SQLite) para histórico e consulta futura.
 
+Ao final de cada análise, o app pergunta se você quer **gerar um artefato em HTML**
+(Tailwind CSS, com tema claro/escuro) e abri-lo no navegador.
+
 ---
 
 ## 🛠️ Stack & por quê
@@ -151,6 +154,7 @@ src/startup_validator/
 ├── config.py      # variáveis de ambiente e configuração
 ├── schemas.py     # modelos Pydantic de resposta (DetailedValidation)
 ├── prompts.py     # centralização de prompts e instruções
+├── artifacts.py   # geração de artefatos HTML (Tailwind, tema claro/escuro)
 ├── agent.py       # fábrica de agentes (estruturado e texto livre)
 ├── commands.py    # handlers de cada comando do menu
 ├── services.py    # cache, refinamento, comparativo, exportação, streaming

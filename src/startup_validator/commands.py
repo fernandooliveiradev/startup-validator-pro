@@ -10,9 +10,21 @@ from pathlib import Path
 from agno.agent import Agent
 
 from startup_validator import agent as agent_factory
-from startup_validator import db, history, prompts, services, ui
+from startup_validator import artifacts, db, history, prompts, services, ui
 from startup_validator.schemas import DetailedValidation
 from startup_validator.stream import render_stream
+
+
+def _oferecer_artefato(titulo: str, markdown: str, tipo: str) -> None:
+    """Pergunta se quer gerar o artefato HTML da saída e, se sim, abre ou mostra o caminho."""
+    if not ui.ask_gerar_artefato(tipo):
+        return
+    abrir = ui.ask_abrir_artefato()
+    caminho = artifacts.salvar_artefato(titulo, markdown, tipo, abrir=abrir)
+    if not abrir:
+        ui.print_info(f"✅ Artefato salvo em [bold]{caminho}[/bold]")
+    else:
+        ui.print_info(f"🌐 Abrindo [bold]{caminho}[/bold]")
 
 
 def _prompt_for_session(agent: Agent, contexto: str):
@@ -48,8 +60,10 @@ async def cmd_validar(agent: Agent) -> None:
 
     if modelo is not None:
         ui.print_report(modelo.to_panel_text())
+        _oferecer_artefato(f"Validação — {ideia[:50]}", modelo.to_markdown(), "relatorio")
     elif texto.strip():
         ui.print_report(texto)
+        _oferecer_artefato(f"Validação — {ideia[:50]}", texto, "relatorio")
     else:
         ui.print_error("Não foi possível obter um relatório estruturado.")
 
@@ -68,6 +82,7 @@ async def cmd_refinar(agent: Agent) -> None:
     ui.print_info(f"🔄 Refinando a ideia em {rodadas} rodada(s)...")
     final, modelo = await asyncio.to_thread(services.refine_idea, agent, ideia, rodadas)
     ui.print_report(modelo.to_panel_text())
+    _oferecer_artefato(f"Refinamento — {ideia[:50]}", modelo.to_markdown(), "relatorio")
 
 
 async def cmd_pitch(agent: Agent) -> None:
@@ -89,6 +104,7 @@ async def cmd_pitch(agent: Agent) -> None:
     _, texto = await render_stream(stream, ui.console, structured=False)
     if texto.strip():
         ui.print_report(texto)
+        _oferecer_artefato(f"Pitch Deck Review — {alvo['id_curto']}", texto, "pitch")
 
 
 def cmd_historico(agent: Agent) -> None:
@@ -137,6 +153,7 @@ async def cmd_comparar(agent: Agent) -> None:
     ui.print_info("⚖️ Gerando comparativo...")
     resultado = await asyncio.to_thread(services.compare_ideas, comparador, modelos)
     ui.print_report(resultado)
+    _oferecer_artefato("Comparativo de Ideias", resultado, "comparativo")
 
 
 def cmd_exportar(agent: Agent) -> None:

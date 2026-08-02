@@ -21,3 +21,8 @@ tmp/
 *.db
 *.sqlite
 *.sqlite3
+
+# Gerados (artefatos HTML)
+artefatos/
+validation_*.md
+validation_*.json

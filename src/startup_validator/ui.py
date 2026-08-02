@@ -149,3 +149,23 @@ def print_error(message: str) -> None:
 
 def print_info(message: str) -> None:
     console.print(f"[dim]{message}[/dim]")
+
+
+def ask_gerar_artefato(artefato: str) -> bool:
+    """Pergunta se o usuário quer gerar o artefato HTML da saída."""
+    resp = Prompt.ask(
+        f"\n📄 Gerar artefato HTML deste {artefato}? (s/n)",
+        choices=["s", "n"],
+        default="s",
+    )
+    return resp.lower() == "s"
+
+
+def ask_abrir_artefato() -> bool:
+    """Pergunta se o usuário quer abrir o artefato no navegador."""
+    resp = Prompt.ask(
+        "\n🌐 Abrir o artefato no navegador? (s/n)",
+        choices=["s", "n"],
+        default="s",
+    )
+    return resp.lower() == "s"

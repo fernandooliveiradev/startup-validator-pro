@@ -4,6 +4,15 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [3.3.0] — 2026-08-02
+
+### Adicionado
+
+- **Artefatos HTML** (Tailwind CSS via CDN) com **tema claro e escuro** (quase preto) e toggle.
+- Ao final de cada saída (validação, refinamento, pitch deck review e comparativo), o app
+  pergunta se o usuário quer gerar o artefato HTML; se sim, mostra o caminho ou abre no navegador.
+- Módulo `artifacts.py` com geração segura de HTML (escape de conteúdo) e Markdown → HTML básico.
+
 ## [3.2.2] — 2026-08-02
 
 ### Alterado
