@@ -5,6 +5,19 @@ build/
 dist/
 wheels/
 *.egg-info
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
 # Virtual environments
-.venv
+.venv/
+
+# Environment variables (never commit secrets)
+.env
+.env.local
+
+# Runtime data / databases
+tmp/
+*.db
+*.sqlite
+*.sqlite3
