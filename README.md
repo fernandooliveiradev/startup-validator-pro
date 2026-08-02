@@ -108,16 +108,19 @@ uv run startup-validator
 
 ### Menu
 
-| Opção | Ação |
-|------|------|
-| `1` | Validar nova ideia |
-| `2` | Validar com refinamento iterativo |
-| `3` | Pitch Deck Review |
-| `4` | Ver histórico |
-| `5` | Ver relatório completo |
-| `6` | Comparar ideias |
-| `7` | Exportar (Markdown/JSON) |
-| `8` | Sair |
+O menu é organizado em seções. Use `0` para ver a ajuda completa dentro do app.
+
+| Opção | Seção | Ação |
+|------|-------|------|
+| `1` | Criar | Validar nova ideia (relatório estruturado) |
+| `2` | Criar | Validar com refinamento iterativo |
+| `3` | Criar | Pitch Deck Review |
+| `4` | Gerenciar | Ver histórico |
+| `5` | Gerenciar | Ver relatório completo |
+| `6` | Gerenciar | Comparar ideias |
+| `7` | Gerenciar | Exportar (Markdown/JSON) |
+| `0` | Sistema | Ajuda |
+| `8` | Sistema | Sair |
 
 ### Testes
 
@@ -134,7 +137,9 @@ uv run pytest
 - **Saída estruturada robusta**: o parsing do schema é resiliente a falhas intermitentes do LLM (o sistema tenta múltiplas estratégias de parse antes de desistir).
 - **Cache de validação**: ideias parecidas não são re-validadas (match fuzzy por resumo).
 - **Verticais especializadas**: instruções diferentes por setor (SaaS, E-commerce, Foodtech, IA, Marketplace, Fintech).
-- **Separação de responsabilidades**: código organizado em módulos (`config`, `schemas`, `agent`, `services`, `stream`, `history`, `db`, `ui`, `cli`).
+- **Separação de responsabilidades**: código organizado em módulos (`config`, `schemas`, `prompts`, `agent`, `commands`, `services`, `stream`, `history`, `db`, `ui`, `cli`).
+- **Zero hardcode e zero duplicação**: prompts centralizados em `prompts.py`; streaming unificado em um único gerador parametrizado; cada comando do menu isolado em `commands.py`.
+- **Ajuda integrada**: opção `0` explica o que cada ação faz, direto no terminal.
 
 ---
 
@@ -145,14 +150,16 @@ src/startup_validator/
 ├── __init__.py    # metadados do pacote
 ├── config.py      # variáveis de ambiente e configuração
 ├── schemas.py     # modelos Pydantic de resposta (DetailedValidation)
+├── prompts.py     # centralização de prompts e instruções
 ├── agent.py       # fábrica de agentes (estruturado e texto livre)
+├── commands.py    # handlers de cada comando do menu
 ├── services.py    # cache, refinamento, comparativo, exportação, streaming
 ├── stream.py      # renderização em tempo real (Rich Live)
 ├── verticals.py   # templates de análise por vertical
 ├── history.py     # leitura do histórico de validações
 ├── db.py          # persistência SQLite (agno)
-├── ui.py          # interface Rich (menu, tabelas, prompts)
-└── cli.py         # loop principal do app
+├── ui.py          # interface Rich (menu em seções, ajuda, prompts)
+└── cli.py         # dispatcher fino (loop principal)
 ```
 
 ---

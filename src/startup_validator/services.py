@@ -1,17 +1,18 @@
-"""Serviços de alto nível: cache, refinamento, comparativo e exportação."""
+"""Serviços de alto nível: cache, refinamento, comparativo, exportação e streaming."""
 
 import json
 import re
 from datetime import datetime
-from typing import Any, AsyncIterator, List, Optional, Tuple
+from typing import Any, AsyncIterator, Callable, List, Optional, Tuple
 
 from agno.agent import Agent
 
-from startup_validator import config, db, history
+from startup_validator import config, db, history, prompts
 from startup_validator.schemas import DetailedValidation
 
 # Normalização mínima de palavras-chave para comparação fuzzy de ideias.
 _STOPWORDS = {"de", "da", "do", "um", "uma", "para", "que", "com", "em", "o", "a", "os", "as", "e"}
+_CACHE_THRESHOLD = 0.6
 
 
 def _normalize(text: str) -> set:
@@ -19,28 +20,31 @@ def _normalize(text: str) -> set:
     return {p for p in palavras if p not in _STOPWORDS and len(p) > 2}
 
 
+# --- Cache de validação ---
+
 def find_cached_validation(agent: Agent, ideia: str) -> Optional[DetailedValidation]:
     """Retorna uma validação salva se uma ideia muito similar já foi validada."""
     alvo = _normalize(ideia)
     if not alvo:
         return None
 
-    melhor = None
+    melhor: Optional[DetailedValidation] = None
     melhor_overlap = 0.0
     for session in db.list_sessions(agent.db):
         relatorio = history.get_full_report_model(agent, session.session_id)
         if relatorio is None:
             continue
-        # Compara a ideia de entrada apenas contra o resumo da validação salva.
         candidato = _normalize(relatorio.resumo or "")
         if not candidato:
             continue
         overlap = len(alvo & candidato) / len(alvo)
-        if overlap >= 0.6 and overlap > melhor_overlap:
+        if overlap >= _CACHE_THRESHOLD and overlap > melhor_overlap:
             melhor = relatorio
             melhor_overlap = overlap
     return melhor
 
+
+# --- Refinamento e comparativo ---
 
 def refine_idea(agent: Agent, ideia: str, iteracao: int = 2) -> Tuple[str, DetailedValidation]:
     """Refina a ideia em rodadas, incorporando feedback a cada validação.
@@ -48,14 +52,11 @@ def refine_idea(agent: Agent, ideia: str, iteracao: int = 2) -> Tuple[str, Detai
     Retorna (ideia_final, ultima_validacao).
     """
     atual = ideia
-    for rodada in range(iteracao):
+    for _ in range(iteracao):
         relatorio = _validate_once(agent, atual)
         pontos = relatorio.pontos_fracos
         feedback = "\n".join(f"- {p}" for p in (pontos or [])[:3])
-        atual = (
-            f"{atual}\n\n[Refinamento] Com base nos pontos fracos apontados abaixo, "
-            f"apresente uma versão ajustada e melhor da ideia:\n{feedback}"
-        )
+        atual = prompts.REFINAR_FEEDBACK_TEMPLATE.format(ideia=atual, feedback=feedback)
     final = _validate_once(agent, atual)
     return atual, final
 
@@ -63,17 +64,16 @@ def refine_idea(agent: Agent, ideia: str, iteracao: int = 2) -> Tuple[str, Detai
 def _validate_once(agent: Agent, ideia: str) -> DetailedValidation:
     """Valida a ideia e devolve o modelo `DetailedValidation`.
 
-    O agno nem sempre converte a resposta para o objeto estruturado
-    (parsing falha intermitentemente no DeepSeek). Por isso, tenta primeiro
-    o objeto direto e, se necessário, faz o parse do conteúdo bruto.
+    O agno nem sempre converte a resposta para o objeto estruturado (parsing
+    falha intermitentemente no DeepSeek). Por isso, tenta primeiro o objeto
+    direto e, se necessário, faz o parse do conteúdo bruto ou das mensagens
+    da sessão.
     """
-    run = agent.run(f"Valide esta ideia de startup: {ideia}. Pesquise mercado e concorrentes.", stream=False)
+    prompt = prompts.VALIDAR_IDEIA_TEMPLATE.format(ideia=ideia)
+    run = agent.run(prompt, stream=False)
     modelo = _to_model(run.content)
     if modelo is not None:
         return modelo
-
-    # Último recurso: procurar JSON estruturado nas mensagens da sessão.
-    from startup_validator import history
 
     if run.session_id:
         modelo = history.get_full_report_model(agent, run.session_id)
@@ -85,15 +85,13 @@ def _validate_once(agent: Agent, ideia: str) -> DetailedValidation:
 
 def compare_ideas(agent: Agent, ideias: List[str]) -> str:
     """Gera um relatório comparativo ranqueando as ideias."""
-    prompt = (
-        "Compare as seguintes ideias de startup e ranqueie da mais para a menos promissora, "
-        "justificando cada posição com base em mercado, moat, dificuldade e unidade econômica:\n\n"
-        + "\n".join(f"{i + 1}. {ideia}" for i, ideia in enumerate(ideias))
-        + "\n\nResponda em português, em formato de lista ordenada com argumentos claros."
-    )
+    lista = "\n".join(f"{i + 1}. {ideia}" for i, ideia in enumerate(ideias))
+    prompt = prompts.COMPARAR_IDEAS_TEMPLATE.format(ideias=lista)
     run = agent.run(prompt, stream=False)
     return str(run.content)
 
+
+# --- Exportação ---
 
 def export_validation(model: DetailedValidation, formato: str) -> Tuple[str, str]:
     """Serializa um relatório para exportação.
@@ -110,13 +108,18 @@ def default_export_path(formato: str) -> str:
     return f"validation_{ts}.{formato}"
 
 
+# --- Streaming ---
+
+EventParser = Callable[[Any], Optional[DetailedValidation]]
+
+
 def _to_model(content) -> Optional[DetailedValidation]:
+    """Converte conteúdo bruto em `DetailedValidation`, quando possível."""
     if isinstance(content, DetailedValidation):
         return content
     if isinstance(content, str):
         try:
-            data = json.loads(content)
-            return DetailedValidation.model_validate(data)
+            return DetailedValidation.model_validate(json.loads(content))
         except Exception:
             return None
     if isinstance(content, dict):
@@ -127,21 +130,24 @@ def _to_model(content) -> Optional[DetailedValidation]:
     return None
 
 
-async def stream_validation(agent: Agent, ideia: str):
-    """Executa a validação com streaming, emitindo eventos para a UI.
+def _tool_name(evento: Any) -> str:
+    tool = getattr(evento, "tool", None)
+    nome = getattr(tool, "tool_name", None) if tool else None
+    return nome or "ferramenta"
 
-    Itera os eventos de `agent.arun(stream=True)` e emite deltas para o
-    consumidor via um gerador assíncrono. Em caso de falha de modelo, tenta
-    o modelo fallback (`FALLBACK_MODEL_ID`).
 
-    Importante: este gerador **sempre** emite `done` ao final, acumulando o
-    conteúdo recebido e tentando o parse estruturado no fim. Isso evita que a
-    UI fique presa quando o parsing do JSON falha intermitentemente.
+async def stream_run(agent: Agent, ideia: str, parser: Optional[EventParser] = None):
+    """Executa a chamada de IA com streaming, emitindo eventos para a UI.
 
-    Cada item emitido é um dict com uma das chaves:
-        - tipo: "thinking", "tool_started", "tool_completed", "content", "done"
-        - conteudo: o delta/texto/objeto relevante
-        - erro: mensagem de erro (tipo "error")
+    Unifica o streaming estruturado e o de texto livre:
+    - `parser` é uma função que tenta converter cada conteúdo em `DetailedValidation`.
+      Se for None, o modo é texto livre (sempre termina com o texto final).
+
+    Em caso de falha de modelo, tenta o fallback (`FALLBACK_MODEL_ID`).
+
+    Eventos emitidos (dict):
+        tipo: "start" | "thinking" | "tool_started" | "tool_completed"
+              | "content" | "done" | "error" | "info"
     """
     yield {"tipo": "start"}
     deltas: list = []
@@ -152,18 +158,19 @@ async def stream_validation(agent: Agent, ideia: str):
         async for evento in agent.arun(ideia, stream=True):
             nome = getattr(evento, "event", "")
             if nome in ("RunContent", "RunIntermediateContent", "RunCompleted"):
-                c = getattr(evento, "content", None)
                 # O raciocínio do DeepSeek chega dentro do RunContent, não em
                 # evento separado. Emitimos como "thinking" em tempo real.
                 rc = getattr(evento, "reasoning_content", None)
                 if rc:
                     yield {"tipo": "thinking", "conteudo": rc}
+                c = getattr(evento, "content", None)
                 if isinstance(c, str) and c.strip():
                     deltas.append(c)
                     yield {"tipo": "content", "conteudo": c}
-                m = _to_model(c)
-                if m is not None:
-                    modelo_final = m
+                if parser is not None:
+                    m = parser(c)
+                    if m is not None:
+                        modelo_final = m
             elif nome == "ReasoningContentDelta":
                 yield {"tipo": "thinking", "conteudo": getattr(evento, "reasoning_content", "")}
             elif nome == "ToolCallStarted":
@@ -186,57 +193,23 @@ async def stream_validation(agent: Agent, ideia: str):
 
     # Parse do conteúdo completo acumulado, se ainda não tiver modelo.
     if modelo_final is None and deltas:
-        modelo_final = _to_model("".join(deltas))
-        if modelo_final is None:
-            modelo_final = _to_model(deltas[-1])
+        modelo_final = _to_model("".join(deltas)) or _to_model(deltas[-1])
 
-    yield {"tipo": "done", "conteudo": modelo_final}
-
-
-async def stream_free_text(agent: Agent, ideia: str):
-    """Executa uma chamada de texto livre com streaming, sem schema estruturado.
-
-    Diferente de `stream_validation`, este gerador **sempre** emite um evento
-    `done` ao final (mesmo que o conteúdo não seja estruturado), evitando que a
-    UI fique presa esperando um modelo que o parsing pode não produzir.
-    """
-    yield {"tipo": "start"}
-    deltas: list = []
-    final_content = None
-    try:
-        async for evento in agent.arun(ideia, stream=True):
-            nome = getattr(evento, "event", "")
-            if nome in ("RunContent", "RunIntermediateContent"):
-                c = getattr(evento, "content", None)
-                rc = getattr(evento, "reasoning_content", None)
-                if rc:
-                    yield {"tipo": "thinking", "conteudo": rc}
-                if isinstance(c, str) and c.strip():
-                    deltas.append(c)
-                    yield {"tipo": "content", "conteudo": c}
-            elif nome == "ReasoningContentDelta":
-                yield {"tipo": "thinking", "conteudo": getattr(evento, "reasoning_content", "")}
-            elif nome == "ToolCallStarted":
-                yield {"tipo": "tool_started", "conteudo": _tool_name(evento)}
-            elif nome == "ToolCallCompleted":
-                yield {"tipo": "tool_completed", "conteudo": _tool_name(evento)}
-            elif nome == "RunCompleted":
-                c = getattr(evento, "content", None)
-                if isinstance(c, str) and c.strip():
-                    final_content = c
-    except Exception as exc:
-        yield {"tipo": "error", "erro": str(exc)}
-        return
-
-    if not final_content:
-        final_content = "".join(deltas) or "Sem resposta."
-    yield {"tipo": "done", "conteudo": final_content}
+    if parser is not None:
+        yield {"tipo": "done", "conteudo": modelo_final}
+    else:
+        texto = "".join(deltas) or "Sem resposta."
+        yield {"tipo": "done", "conteudo": texto}
 
 
-def _tool_name(evento: Any) -> str:
-    tool = getattr(evento, "tool", None)
-    nome = getattr(tool, "tool_name", None) if tool else None
-    return nome or "ferramenta"
+def stream_validation(agent: Agent, ideia: str):
+    """Streaming de validação estruturada (parser de `DetailedValidation`)."""
+    return stream_run(agent, ideia, parser=_to_model)
+
+
+def stream_free_text(agent: Agent, ideia: str):
+    """Streaming de texto livre (sem parser estruturado)."""
+    return stream_run(agent, ideia, parser=None)
 
 
 def build_model_with_fallback():

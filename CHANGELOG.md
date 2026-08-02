@@ -4,6 +4,24 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [3.2.0] — 2026-08-02
+
+### Adicionado
+
+- **Ajuda integrada** (opção `0` no menu): explica o que o app faz e o que cada ação produz.
+- Menu organizado em **seções** (`Criar`, `Gerenciar`, `Sistema`) para facilitar a navegação.
+- Módulo `prompts.py` centraliza todos os prompts e instruções (elimina hardcode espalhado).
+- Módulo `commands.py` isola o handler de cada comando do menu.
+- Testes novos para `prompts` e para o streaming unificado.
+
+### Alterado
+
+- **Streaming unificado**: `stream_run` substitui `stream_validation`/`stream_free_text` com um gerador único parametrizado por parser (elimina ~80% de duplicação).
+- **Renderer unificado**: `render_stream(..., structured=bool)` substitui `render_stream`/`render_free_text`.
+- `cli.py` virou um **dispatcher fino** que mapeia opção -> handler, sem lógica de negócio no loop.
+- `agent.py` documenta a regra de qual agente usar (estruturado vs. texto livre) e usa `prompts.py`.
+- `ui.py` sem código morto (`ask_compare_count`, `print_idea_list`, etc. removidos).
+
 ## [3.1.1] — 2026-08-02
 
 ### Corrigido

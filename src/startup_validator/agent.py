@@ -1,4 +1,11 @@
-"""Fábrica e configuração do agente analista baseado em DeepSeek V4."""
+"""Fábrica de agentes baseados em DeepSeek V4.
+
+Regra de uso:
+- `build_agent`: agente **estruturado** (produz `DetailedValidation`), conectado
+  ao banco para persistência e cache. Use para validar e refinar ideias.
+- `build_free_text_agent`: agente de **texto livre** (sem schema), para
+  avaliações em texto corrido (pitch review, comparativo).
+"""
 
 from typing import Any, Dict, Optional
 
@@ -6,16 +13,9 @@ from agno.agent import Agent
 from agno.models.deepseek import DeepSeek
 from agno.tools.tavily import TavilyTools
 
-from startup_validator import config
+from startup_validator import config, prompts
 from startup_validator.schemas import DetailedValidation
 from startup_validator.verticals import get_vertical
-
-BASE_INSTRUCTIONS = [
-    "Você é um investidor-anjo sênior e brutalmente honesto.",
-    "Sempre use a ferramenta Tavily para buscar dados REAIS de mercado e concorrentes antes de responder.",
-    "Responda exclusivamente no formato estruturado solicitado, em português.",
-    "Seja objetivo, com argumentos claros e recomendações acionáveis.",
-]
 
 
 def build_model(model_id: Optional[str] = None, max_tokens: Optional[int] = None) -> DeepSeek:
@@ -32,13 +32,27 @@ def build_model(model_id: Optional[str] = None, max_tokens: Optional[int] = None
     )
 
 
+def _base_kwargs(
+    db: Optional[Any] = None,
+    model_id: Optional[str] = None,
+    max_tokens: Optional[int] = None,
+) -> dict:
+    """Argumentos comuns a todos os agentes."""
+    return {
+        "model": build_model(model_id=model_id, max_tokens=max_tokens),
+        "tools": [TavilyTools()],
+        "db": db,
+        "markdown": False,
+    }
+
+
 def build_agent(
     db: Optional[Any] = None,
     vertical: Optional[str] = None,
     model_id: Optional[str] = None,
     max_tokens: Optional[int] = None,
 ) -> Agent:
-    """Constrói o agente analista conectado ao banco (se fornecido).
+    """Agente estruturado (saída `DetailedValidation`) com persistência.
 
     Args:
         db: Banco SQLite (agno) para persistência.
@@ -46,20 +60,18 @@ def build_agent(
         model_id: Id do modelo DeepSeek (permite fallback explícito).
         max_tokens: Limite de tokens de saída.
     """
-    instrucoes = list(BASE_INSTRUCTIONS)
+    instrucoes = list(prompts.AGENTE_ESTRUTURADO_INSTRUCOES)
     if vertical:
         v = get_vertical(vertical)
         instrucoes.extend(v.instrucoes)
 
+    kwargs = _base_kwargs(db=db, model_id=model_id, max_tokens=max_tokens)
     return Agent(
         name="Analista de Startups",
-        model=build_model(model_id=model_id, max_tokens=max_tokens),
-        tools=[TavilyTools()],
         instructions=instrucoes,
         output_schema=DetailedValidation,
-        db=db,
-        markdown=False,
         stream=True,
+        **kwargs,
     )
 
 
@@ -68,20 +80,15 @@ def build_free_text_agent(
     model_id: Optional[str] = None,
     max_tokens: Optional[int] = None,
 ) -> Agent:
-    """Constrói um agente sem schema estruturado, para respostas em texto livre
-    (ex.: comparativo de ideias), evitando que o resultado seja forçado ao
-    formato `DetailedValidation`."""
+    """Agente de texto livre (sem schema), para avaliações em texto corrido.
+
+    Por padrão não recebe `db`, pois avaliações de texto (pitch, comparativo)
+    não geram `DetailedValidation` e não devem poluir o histórico de validações.
+    """
+    kwargs = _base_kwargs(db=db, model_id=model_id, max_tokens=max_tokens)
     return Agent(
         name="Analista Comparador",
-        model=build_model(model_id=model_id, max_tokens=max_tokens),
-        tools=[TavilyTools()],
-        instructions=[
-            "Você é um investidor-anjo sênior e brutalmente honesto.",
-            "Sempre use a ferramenta Tavily para buscar dados REAIS de mercado e concorrentes antes de responder.",
-            "Responda em português, em texto corrido e bem estruturado.",
-            "Seja objetivo e acionável.",
-        ],
-        db=db,
-        markdown=False,
+        instructions=list(prompts.AGENTE_TEXTO_LIVRE_INSTRUCOES),
         stream=False,
+        **kwargs,
     )
