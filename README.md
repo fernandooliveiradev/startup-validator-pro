@@ -114,7 +114,7 @@ O menu é organizado em seções. Use `0` para ver a ajuda completa dentro do ap
 |------|-------|------|
 | `1` | Criar | Validar nova ideia (relatório estruturado) |
 | `2` | Criar | Validar com refinamento iterativo |
-| `3` | Criar | Pitch Deck Review |
+| `3` | Criar | Pitch Deck Review (analisa uma validação salva) |
 | `4` | Gerenciar | Ver histórico |
 | `5` | Gerenciar | Ver relatório completo |
 | `6` | Gerenciar | Comparar ideias |

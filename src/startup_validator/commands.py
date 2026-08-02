@@ -70,15 +70,21 @@ async def cmd_refinar(agent: Agent) -> None:
     ui.print_report(modelo.to_panel_text())
 
 
-async def cmd_pitch() -> None:
-    """Pitch Deck Review: avalia a descrição como um investidor."""
-    ideia = ui.ask_idea()
-    if not ideia.strip():
+async def cmd_pitch(agent: Agent) -> None:
+    """Pitch Deck Review: avalia uma validação já gerada como se fosse um pitch."""
+    alvo = _prompt_for_session(agent, "pitch deck")
+    if alvo is None:
         return
 
-    ui.print_info("🎬 Revisando o pitch...")
+    modelo = history.get_full_report_model(agent, alvo["id"])
+    if modelo is None:
+        ui.print_error("Nenhuma validação estruturada encontrada para este ID.")
+        return
+
+    relatorio = modelo.to_markdown()
+    ui.print_info(f"🎬 Revisando o pitch deck da validação [bold]{alvo['id_curto']}[/bold]...")
     comparador = agent_factory.build_free_text_agent()
-    prompt = prompts.PITCH_REVIEW_TEMPLATE.format(ideia=ideia)
+    prompt = prompts.PITCH_REVIEW_TEMPLATE.format(relatorio=relatorio)
     stream = services.stream_free_text(comparador, prompt)
     _, texto = await render_stream(stream, ui.console, structured=False)
     if texto.strip():

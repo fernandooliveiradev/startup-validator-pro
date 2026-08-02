@@ -32,7 +32,7 @@ async def main_app() -> None:
         "0": commands.cmd_ajuda,
         "1": _make_async(commands.cmd_validar, analista),
         "2": _make_async(commands.cmd_refinar, analista),
-        "3": commands.cmd_pitch,
+        "3": _make_async(commands.cmd_pitch, analista),
         "4": _make_sync(commands.cmd_historico, analista),
         "5": _make_sync(commands.cmd_relatorio, analista),
         "6": _make_async(commands.cmd_comparar, analista),

@@ -17,9 +17,10 @@ def test_validar_template_format():
 
 
 def test_pitch_template_format():
-    texto = prompts.PITCH_REVIEW_TEMPLATE.format(ideia="app")
-    assert "app" in texto
+    texto = prompts.PITCH_REVIEW_TEMPLATE.format(relatorio="relatório de validação")
+    assert "relatório de validação" in texto
     assert "investidor" in texto.lower()
+    assert "PROPOSTA DE VALOR" in texto
 
 
 def test_refinar_template_format():

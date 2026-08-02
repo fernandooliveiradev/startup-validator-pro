@@ -1,6 +1,6 @@
 [project]
 name = "startup-validator-pro"
-version = "3.2.1"
+version = "3.2.2"
 description = "Valida ideias de startup usando DeepSeek V4 e pesquisa de mercado (Tavily)."
 readme = "README.md"
 requires-python = ">=3.13"

@@ -24,10 +24,10 @@ def test_handlers_que_requerem_agent():
     assert _handler_aceita_agent("cmd_historico")
     assert _handler_aceita_agent("cmd_relatorio")
     assert _handler_aceita_agent("cmd_exportar")
+    assert _handler_aceita_agent("cmd_pitch")
 
 
-def test_cmd_pitch_nao_requer_agent():
-    assert not _handler_aceita_agent("cmd_pitch")
+def test_cmd_ajuda_nao_requer_agent():
     assert not _handler_aceita_agent("cmd_ajuda")
 
 

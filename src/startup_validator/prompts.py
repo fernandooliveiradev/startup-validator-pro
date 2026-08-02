@@ -36,9 +36,23 @@ VALIDAR_IDEIA_TEMPLATE = (
 )
 
 PITCH_REVIEW_TEMPLATE = (
-    "O usuário descreveu a ideia de startup abaixo em texto. Revise como um "
-    "investidor-anjo avaliaria esse pitch: aponte forças, falhas, lacunas e o "
-    "que faltaria para investir.\n\nDescrição: {ideia}"
+    "Abaixo está o relatório de validação de uma ideia de startup, já analisado "
+    "por um investidor. Faça uma avaliação de PITCH DECK a partir desse conteúdo, "
+    "cobrindo os seguintes pilares:\n\n"
+    "1. CLAREZA DA PROPOSTA DE VALOR — o problema e a solução ficam claros em "
+    "poucos segundos?\n"
+    "2. COERÊNCIA DO MODELO DE NEGÓCIOS — a monetização, o mercado (TAM/SAM/SOM) "
+    "e as projeções são realistas e atraentes?\n"
+    "3. ESTRUTURA E STORYTELLING — a narrativa (problema, solução, tração, equipe, "
+    "mercado, pedido de investimento) flui de forma convincente?\n"
+    "4. DESIGN E IMPACTO VISUAL — identidade visual transmite profissionalismo, "
+    "sem excesso de texto ou poluição?\n"
+    "5. ALINHAMENTO COM O INVESTIDOR — quais perguntas difíceis os fundos de VC ou "
+    "investidores-anjo fariam, e como os fundadores devem respondê-las?\n\n"
+    "Para cada pilar: aponte o que está bom, o que está fraco e como melhorar. "
+    "Termine com um checklist objetivo do que falta para o pitch atrair "
+    "investimento.\n\n"
+    "Conteúdo da validação:\n{relatorio}"
 )
 
 REFINAR_FEEDBACK_TEMPLATE = (
@@ -66,8 +80,9 @@ e avalia a viabilidade como um investidor-anjo. Tudo fica salvo no histórico.
                           análise de mercado, CAC, MVP, próximos passos e fontes).
  2. Refinar ideia       → valida e, em rodadas, melhora a ideia com base nos
                           pontos fracos apontados.
- 3. Pitch Deck Review   → avalia a sua descrição como se fosse um pitch para um
-                          investidor: forças, falhas e o que faltaria para investir.
+ 3. Pitch Deck Review   → escolhe uma validação já salva e a avalia como um pitch
+                          para investidor: clareza, modelo de negócio, storytelling,
+                          design e alinhamento com o investidor.
 
 [bold]Opções de gerenciamento:[/bold]
  4. Ver histórico       → lista as validações salvas (ID, data e ideia).

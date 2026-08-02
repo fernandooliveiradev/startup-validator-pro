@@ -4,6 +4,16 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [3.2.2] — 2026-08-02
+
+### Alterado
+
+- **Pitch Deck Review** agora analisa uma **validação já salva** no histórico (selecionada
+  pelo ID), em vez de solicitar uma nova ideia em texto.
+- O prompt de avaliação cobre os **5 pilares**: clareza da proposta de valor, coerência do
+  modelo de negócios (TAM/SAM/SOM), estrutura e storytelling, design e impacto visual, e
+  alinhamento com o investidor (perguntas difíceis que fundos fazem).
+
 ## [3.2.1] — 2026-08-02
 
 ### Corrigido
