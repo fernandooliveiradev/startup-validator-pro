@@ -70,3 +70,37 @@ def test_stream_emit_thinking():
         assert thinking == ["pensando"]
 
     asyncio.run(main())
+
+
+def test_stream_parse_falha_no_delta_mas_recupera_no_fim():
+    """Cobre a causa raiz: parsing falha em deltas parciais, mas o modelo é
+    reconstruído a partir do conteúdo completo acumulado (fallback robusto)."""
+    async def main():
+        # Delta parcial que não é JSON válido sozinho, seguido do JSON completo.
+        ag = FakeAgent(
+            [
+                FakeEvent("RunContent", '{"resumo": "par'),
+                FakeEvent("RunContent", 'cial"}'),
+                _json_event(),
+            ]
+        )
+        modelo = None
+        async for item in services.stream_validation(ag, "x"):
+            if item["tipo"] == "done":
+                modelo = item["conteudo"]
+        assert isinstance(modelo, DetailedValidation)
+        assert modelo.resumo == "t"
+
+    asyncio.run(main())
+
+
+def test_stream_sem_parser_entrega_texto_acumulado():
+    async def main():
+        ag = FakeAgent([FakeEvent("RunContent", "a"), FakeEvent("RunContent", "b")])
+        texto = None
+        async for item in services.stream_free_text(ag, "x"):
+            if item["tipo"] == "done":
+                texto = item["conteudo"]
+        assert texto == "ab"
+
+    asyncio.run(main())

@@ -70,6 +70,10 @@ def build_agent(
         name="Analista de Startups",
         instructions=instrucoes,
         output_schema=DetailedValidation,
+        # O agno tenta parsear cada delta parcial de JSON durante o streaming,
+        # o que sempre falha e gera ruído. Desligamos esse parsing heurístico e
+        # fazemos o parse estruturado nós mesmos no fim (ver services.stream_run).
+        parse_response=False,
         stream=True,
         **kwargs,
     )

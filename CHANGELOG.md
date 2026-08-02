@@ -4,6 +4,23 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [3.5.0] — 2026-08-02
+
+### Corrigido (causa raiz)
+
+- **Warnings de parsing do agno resolvidos na origem, não escondidos.** O agente
+  estruturado agora usa `parse_response=False`: o agno parava de tentar validar cada
+  delta parcial de JSON durante o streaming (que sempre falha e gerava ruído). O parse
+  estruturado é feito pela nossa camada (`services.stream_run`), robusta e testada.
+- Removido o filtro que ocultava esses warnings (a solução profissional é eliminar a
+  causa, não silenciar o sintoma).
+
+### Adicionado
+
+- Testes de regressão: o parse falha em deltas parciais, mas o modelo é reconstruído
+  a partir do conteúdo completo no fim (fallback robusto).
+- Testes da fábrica de agentes (`parse_response=False` e `output_schema`).
+
 ## [3.4.0] — 2026-08-02
 
 ### Adicionado
