@@ -1,5 +1,6 @@
 """Modelos Pydantic usados para estruturar a resposta do agente."""
 
+import json
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -36,14 +37,18 @@ class DetailedValidation(BaseModel):
     def to_panel_text(self) -> str:
         """Converte o relatório em texto formatado para exibição no terminal."""
         linhas = [f"[bold cyan]RESUMO:[/bold cyan] {self.resumo}", ""]
-        linhas.append("[bold green]PONTOS FORTES:[/bold green]")
-        linhas.extend(f"- {p}" for p in self.pontos_fortes)
-        linhas.append("")
-        linhas.append("[bold red]PONTOS FRACOS:[/bold red]")
-        linhas.extend(f"- {p}" for p in self.pontos_fracos)
-        linhas.append("")
-        linhas.append("[bold yellow]ANÁLISE DE MERCADO:[/bold yellow]")
-        linhas.append(self.analise_mercado)
+
+        if self.pontos_fortes:
+            linhas.append("[bold green]PONTOS FORTES:[/bold green]")
+            linhas.extend(f"- {p}" for p in self.pontos_fortes)
+        if self.pontos_fracos:
+            linhas.append("")
+            linhas.append("[bold red]PONTOS FRACOS:[/bold red]")
+            linhas.extend(f"- {p}" for p in self.pontos_fracos)
+        if self.analise_mercado:
+            linhas.append("")
+            linhas.append("[bold yellow]ANÁLISE DE MERCADO:[/bold yellow]")
+            linhas.append(self.analise_mercado)
 
         if self.score is not None:
             linhas.append("")
@@ -72,7 +77,7 @@ class DetailedValidation(BaseModel):
 
     def to_markdown(self) -> str:
         """Exporta o relatório em Markdown."""
-        m = [f"# Validação de Ideia", "", f"**Resumo:** {self.resumo}", ""]
+        m = ["# Validação de Ideia", "", f"**Resumo:** {self.resumo}", ""]
         m.append("## Pontos Fortes")
         m.extend(f"- {p}" for p in self.pontos_fortes)
         m.append("")
@@ -100,3 +105,24 @@ class DetailedValidation(BaseModel):
     def to_dict(self) -> dict:
         """Exporta o relatório como dicionário serializável."""
         return self.model_dump()
+
+    @classmethod
+    def from_any(cls, content) -> Optional["DetailedValidation"]:
+        """Converte conteúdo bruto (objeto, dict ou JSON string) em `DetailedValidation`.
+
+        Fonte única de verdade para o parse da resposta do agente — usada por
+        `services` e `history`, evitando duplicação da lógica de conversão.
+        """
+        if isinstance(content, cls):
+            return content
+        if isinstance(content, str):
+            try:
+                return cls.model_validate(json.loads(content))
+            except Exception:
+                return None
+        if isinstance(content, dict):
+            try:
+                return cls.model_validate(content)
+            except Exception:
+                return None
+        return None

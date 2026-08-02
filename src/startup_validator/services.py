@@ -71,7 +71,7 @@ def _validate_once(agent: Agent, ideia: str) -> DetailedValidation:
     """
     prompt = prompts.VALIDAR_IDEIA_TEMPLATE.format(ideia=ideia)
     run = agent.run(prompt, stream=False)
-    modelo = _to_model(run.content)
+    modelo = DetailedValidation.from_any(run.content)
     if modelo is not None:
         return modelo
 
@@ -111,27 +111,6 @@ def default_export_path(formato: str) -> str:
 # --- Streaming ---
 
 EventParser = Callable[[Any], Optional[DetailedValidation]]
-
-
-def to_validation_model(content) -> Optional[DetailedValidation]:
-    """Converte conteúdo bruto em `DetailedValidation`, quando possível."""
-    if isinstance(content, DetailedValidation):
-        return content
-    if isinstance(content, str):
-        try:
-            return DetailedValidation.model_validate(json.loads(content))
-        except Exception:
-            return None
-    if isinstance(content, dict):
-        try:
-            return DetailedValidation.model_validate(content)
-        except Exception:
-            return None
-    return None
-
-
-# Alias interno para compatibilidade.
-_to_model = to_validation_model
 
 
 def _tool_name(evento: Any) -> str:
@@ -197,7 +176,7 @@ async def stream_run(agent: Agent, ideia: str, parser: Optional[EventParser] = N
 
     # Parse do conteúdo completo acumulado, se ainda não tiver modelo.
     if modelo_final is None and deltas:
-        modelo_final = _to_model("".join(deltas)) or _to_model(deltas[-1])
+        modelo_final = DetailedValidation.from_any("".join(deltas)) or DetailedValidation.from_any(deltas[-1])
 
     if parser is not None:
         yield {"tipo": "done", "conteudo": modelo_final}
@@ -208,7 +187,7 @@ async def stream_run(agent: Agent, ideia: str, parser: Optional[EventParser] = N
 
 def stream_validation(agent: Agent, ideia: str):
     """Streaming de validação estruturada (parser de `DetailedValidation`)."""
-    return stream_run(agent, ideia, parser=_to_model)
+    return stream_run(agent, ideia, parser=DetailedValidation.from_any)
 
 
 def stream_free_text(agent: Agent, ideia: str):

@@ -1,6 +1,5 @@
 """Serviço de histórico de validações."""
 
-import json
 from datetime import datetime
 
 from agno.agent import Agent
@@ -60,11 +59,9 @@ def get_full_report_model(agent: Agent, session_id: str) -> DetailedValidation |
             continue
         content = msg.content.strip()
         if content.startswith("{") and '"resumo"' in content:
-            try:
-                data = json.loads(content)
-                return DetailedValidation.model_validate(data)
-            except Exception:
-                continue
+            modelo = DetailedValidation.from_any(content)
+            if modelo is not None:
+                return modelo
     return None
 
 

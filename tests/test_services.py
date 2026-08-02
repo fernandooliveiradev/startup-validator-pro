@@ -30,22 +30,22 @@ def test_export_markdown():
     assert "# Validação de Ideia" in conteudo
 
 
-def test_to_model_aceita_objeto():
-    assert services._to_model(_modelo()) is not None
+def test_from_any_aceita_objeto():
+    assert DetailedValidation.from_any(_modelo()) is not None
 
 
-def test_to_model_aceita_dict():
-    m = services._to_model(_modelo().to_dict())
+def test_from_any_aceita_dict():
+    m = DetailedValidation.from_any(_modelo().to_dict())
     assert m is not None and m.score == 70
 
 
-def test_to_model_aceita_json():
-    m = services._to_model(json.dumps(_modelo().to_dict()))
+def test_from_any_aceita_json():
+    m = DetailedValidation.from_any(json.dumps(_modelo().to_dict()))
     assert m is not None and m.score == 70
 
 
-def test_to_model_rejeita_lixo():
-    assert services._to_model("não é json") is None
+def test_from_any_rejeita_lixo():
+    assert DetailedValidation.from_any("não é json") is None
 
 
 def test_normalize_remove_stopwords():

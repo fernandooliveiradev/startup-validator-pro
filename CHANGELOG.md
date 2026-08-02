@@ -4,6 +4,15 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [3.5.1] — 2026-08-02
+
+### Alterado (eliminação de duplicação)
+
+- Parse JSON → `DetailedValidation` centralizado em `DetailedValidation.from_any`
+  (antes duplicado em `services.to_validation_model`, `_to_model` e `history`).
+- Removido o alias `_to_model`/`to_validation_model` de `services.py`.
+- `history.get_full_report_model` usa `from_any` (uma única fonte de verdade).
+
 ## [3.5.0] — 2026-08-02
 
 ### Corrigido (causa raiz)

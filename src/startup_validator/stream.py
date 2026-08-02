@@ -6,7 +6,6 @@ from rich.console import Console
 from rich.live import Live
 from rich.text import Text
 
-from startup_validator.services import to_validation_model
 from startup_validator.schemas import DetailedValidation
 
 
@@ -57,7 +56,7 @@ async def render_stream(
                 if isinstance(c, str) and c.strip():
                     buffer.append(c)
                 else:
-                    m = to_validation_model(c)
+                    m = DetailedValidation.from_any(c)
                     if m is not None:
                         final_model = m
                 live.update(_render_state(buffer, thinking, status))
