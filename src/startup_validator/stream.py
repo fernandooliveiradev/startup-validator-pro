@@ -1,6 +1,6 @@
 """Renderização em tempo real dos eventos de streaming no terminal."""
 
-from typing import AsyncIterator, Optional
+from typing import AsyncIterator, Optional, Tuple
 
 from rich.console import Console
 from rich.live import Live
@@ -13,10 +13,12 @@ _TOOL_SPINNER = "dots"
 _TOOL_COLOR = "cyan"
 
 
-async def render_stream(stream: AsyncIterator[dict], console: Console) -> Optional[DetailedValidation]:
+async def render_stream(stream: AsyncIterator[dict], console: Console) -> Tuple[Optional[DetailedValidation], str]:
     """Consome o gerador de eventos de streaming e renderiza ao vivo.
 
-    Retorna o `DetailedValidation` final quando disponível, senão None.
+    Retorna uma tupla `(modelo, texto_bruto)`: o `DetailedValidation` final
+    quando disponível (senão None) e o texto completo acumulado, para uso
+    como fallback quando o parsing estruturado falha.
     """
     final_model: Optional[DetailedValidation] = None
     buffer: list = []
@@ -61,14 +63,14 @@ async def render_stream(stream: AsyncIterator[dict], console: Console) -> Option
                     final_model = item["conteudo"]
             elif tipo == "error":
                 console.print(f"[bold red]❌ {item.get('erro', 'Erro desconhecido')}[/bold red]")
-                return None
+                return None, "".join(buffer)
 
     # Mostra o raciocínio completo, se houver.
     if thinking:
         console.print("\n[bold dim]🧠 Raciocínio:[/bold dim]")
         console.print("".join(thinking)[:1200])
 
-    return final_model
+    return final_model, "".join(buffer)
 
 
 async def render_free_text(stream: AsyncIterator[dict], console: Console) -> str:

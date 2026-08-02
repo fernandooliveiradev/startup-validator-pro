@@ -35,9 +35,11 @@ async def _run_validacao(analista, ideia: str) -> None:
     stream = services.stream_validation(analista, f"Valide esta ideia de startup: {ideia}. Pesquise mercado e concorrentes.")
     from startup_validator.stream import render_stream
 
-    modelo = await render_stream(stream, ui.console)
+    modelo, texto_bruto = await render_stream(stream, ui.console)
     if modelo is not None:
         ui.print_report(modelo.to_panel_text())
+    elif texto_bruto.strip():
+        ui.print_report(texto_bruto)
     else:
         ui.print_error("Não foi possível obter um relatório estruturado.")
 

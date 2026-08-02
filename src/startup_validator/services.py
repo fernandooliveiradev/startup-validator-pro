@@ -134,42 +134,58 @@ async def stream_validation(agent: Agent, ideia: str):
     consumidor via um gerador assíncrono. Em caso de falha de modelo, tenta
     o modelo fallback (`FALLBACK_MODEL_ID`).
 
+    Importante: este gerador **sempre** emite `done` ao final, acumulando o
+    conteúdo recebido e tentando o parse estruturado no fim. Isso evita que a
+    UI fique presa quando o parsing do JSON falha intermitentemente.
+
     Cada item emitido é um dict com uma das chaves:
         - tipo: "thinking", "tool_started", "tool_completed", "content", "done"
         - conteudo: o delta/texto/objeto relevante
         - erro: mensagem de erro (tipo "error")
     """
     yield {"tipo": "start"}
-    try:
+    deltas: list = []
+    modelo_final: Optional[DetailedValidation] = None
+
+    async def _coletar():
+        nonlocal modelo_final
         async for evento in agent.arun(ideia, stream=True):
             nome = getattr(evento, "event", "")
             if nome in ("RunContent", "RunIntermediateContent", "RunCompleted"):
                 c = getattr(evento, "content", None)
-                yield {"tipo": "content", "conteudo": c}
-                modelo = _to_model(c)
-                if modelo is not None:
-                    yield {"tipo": "done", "conteudo": modelo}
+                if isinstance(c, str) and c.strip():
+                    deltas.append(c)
+                    yield {"tipo": "content", "conteudo": c}
+                m = _to_model(c)
+                if m is not None:
+                    modelo_final = m
             elif nome == "ReasoningContentDelta":
                 yield {"tipo": "thinking", "conteudo": getattr(evento, "reasoning_content", "")}
             elif nome == "ToolCallStarted":
                 yield {"tipo": "tool_started", "conteudo": _tool_name(evento)}
             elif nome == "ToolCallCompleted":
                 yield {"tipo": "tool_completed", "conteudo": _tool_name(evento)}
+
+    try:
+        async for item in _coletar():
+            yield item
     except Exception as exc:
-        # Fallback para o modelo pro.
         if agent.model.id != config.FALLBACK_MODEL_ID:
             agent.model = build_model_with_fallback()
             yield {"tipo": "info", "conteudo": f"Trocando para o modelo fallback ({config.FALLBACK_MODEL_ID})..."}
-            async for evento in agent.arun(ideia, stream=True):
-                nome = getattr(evento, "event", "")
-                if nome in ("RunContent", "RunIntermediateContent", "RunCompleted"):
-                    c = getattr(evento, "content", None)
-                    yield {"tipo": "content", "conteudo": c}
-                    modelo = _to_model(c)
-                    if modelo is not None:
-                        yield {"tipo": "done", "conteudo": modelo}
+            async for item in _coletar():
+                yield item
         else:
             yield {"tipo": "error", "erro": str(exc)}
+            return
+
+    # Parse do conteúdo completo acumulado, se ainda não tiver modelo.
+    if modelo_final is None and deltas:
+        modelo_final = _to_model("".join(deltas))
+        if modelo_final is None:
+            modelo_final = _to_model(deltas[-1])
+
+    yield {"tipo": "done", "conteudo": modelo_final}
 
 
 async def stream_free_text(agent: Agent, ideia: str):
