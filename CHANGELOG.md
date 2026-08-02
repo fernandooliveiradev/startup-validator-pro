@@ -4,6 +4,18 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [3.1.0] — 2026-08-01
+
+### Adicionado
+
+- Nova opção no menu (3) para visualizar o **relatório completo** de uma validação
+  salva no histórico (reconstruído a partir do JSON persistido).
+- Licença **MIT** (`LICENSE`) e metadados correspondentes no `pyproject.toml`.
+
+### Removido
+
+- Aviso de segurança sobre o `.env` no README.
+
 ## [3.0.0] — 2026-08-01
 
 ### Adicionado

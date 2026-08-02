@@ -4,6 +4,8 @@ version = "3.0.0"
 description = "Valida ideias de startup usando DeepSeek V4 e pesquisa de mercado (Tavily)."
 readme = "README.md"
 requires-python = ">=3.13"
+license = { text = "MIT" }
+authors = [{ name = "fernandodeoliveiradev", email = "fernandopaglacci@gmail.com" }]
 # agno[sqlite] -> SqliteDb | agno[openai] -> provider DeepSeek/OpenAI | agno[tavily] -> TavilyTools
 dependencies = [
     "agno[sqlite,openai,tavily]>=2.3.21",

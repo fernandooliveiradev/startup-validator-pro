@@ -43,13 +43,32 @@ async def main_app() -> None:
                 ui.print_error(f"Falha ao validar a ideia: {exc}")
 
         elif opcao == "2":
-            historico = history.get_history(analista)
+            historico = history.list_sessions(analista)
             if not historico:
                 ui.print_no_history()
             else:
                 ui.print_history(historico)
 
         elif opcao == "3":
+            historico = history.list_sessions(analista)
+            if not historico:
+                ui.print_no_history()
+                continue
+
+            ui.print_history(historico)
+            id_curto = ui.ask_session_id()
+            alvo = next((s for s in historico if s["id_curto"] == id_curto), None)
+            if alvo is None:
+                ui.print_report_not_found(id_curto)
+                continue
+
+            relatorio = history.get_full_report(analista, alvo["id"])
+            if relatorio is None:
+                ui.print_report_not_found(id_curto)
+            else:
+                ui.print_report(relatorio)
+
+        elif opcao == "4":
             break
 
 

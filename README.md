@@ -39,7 +39,8 @@ uv run startup-validator
 |-------|----------------------------------------------|
 | `1`   | Validar nova ideia de startup                |
 | `2`   | Ver histórico de validações                  |
-| `3`   | Sair                                         |
+| `3`   | Ver relatório completo de uma validação      |
+| `4`   | Sair                                         |
 
 ## Configuração (.env)
 
@@ -67,4 +68,4 @@ src/startup_validator/
 
 ## Licença
 
-Privado.
+Licenciado sob a [MIT License](LICENSE).
