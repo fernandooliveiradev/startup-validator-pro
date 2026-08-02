@@ -6,6 +6,7 @@ de apresentação (`cli.py`). Isso centraliza regras e evita duplicação.
 
 import asyncio
 from pathlib import Path
+from typing import Optional
 
 from agno.agent import Agent
 
@@ -15,12 +16,17 @@ from startup_validator.schemas import DetailedValidation
 from startup_validator.stream import render_stream
 
 
-def _oferecer_artefato(titulo: str, markdown: str, tipo: str) -> None:
+def _oferecer_artefato(
+    titulo: str,
+    markdown: str,
+    tipo: str,
+    modelo: Optional[DetailedValidation] = None,
+) -> None:
     """Pergunta se quer gerar o artefato HTML da saída e, se sim, abre ou mostra o caminho."""
     if not ui.ask_gerar_artefato(tipo):
         return
     abrir = ui.ask_abrir_artefato()
-    caminho = artifacts.salvar_artefato(titulo, markdown, tipo, abrir=abrir)
+    caminho = artifacts.salvar_artefato(titulo, markdown, tipo, abrir=abrir, modelo=modelo)
     if not abrir:
         ui.print_info(f"✅ Artefato salvo em [bold]{caminho}[/bold]")
     else:
@@ -60,7 +66,7 @@ async def cmd_validar(agent: Agent) -> None:
 
     if modelo is not None:
         ui.print_report(modelo.to_panel_text())
-        _oferecer_artefato(f"Validação — {ideia[:50]}", modelo.to_markdown(), "relatorio")
+        _oferecer_artefato(f"Validação — {ideia[:50]}", modelo.to_markdown(), "relatorio", modelo=modelo)
     elif texto.strip():
         ui.print_report(texto)
         _oferecer_artefato(f"Validação — {ideia[:50]}", texto, "relatorio")
@@ -82,7 +88,7 @@ async def cmd_refinar(agent: Agent) -> None:
     ui.print_info(f"🔄 Refinando a ideia em {rodadas} rodada(s)...")
     final, modelo = await asyncio.to_thread(services.refine_idea, agent, ideia, rodadas)
     ui.print_report(modelo.to_panel_text())
-    _oferecer_artefato(f"Refinamento — {ideia[:50]}", modelo.to_markdown(), "relatorio")
+    _oferecer_artefato(f"Refinamento — {ideia[:50]}", modelo.to_markdown(), "relatorio", modelo=modelo)
 
 
 async def cmd_pitch(agent: Agent) -> None:
@@ -124,7 +130,7 @@ def cmd_relatorio(agent: Agent) -> None:
     modelo = history.get_full_report_model(agent, alvo["id"])
     if modelo is not None:
         ui.print_report(modelo.to_panel_text())
-        _oferecer_artefato(f"Validação — {alvo['id_curto']}", modelo.to_markdown(), "relatorio")
+        _oferecer_artefato(f"Validação — {alvo['id_curto']}", modelo.to_markdown(), "relatorio", modelo=modelo)
         return
 
     # Fallback: texto bruto salvo na sessão.

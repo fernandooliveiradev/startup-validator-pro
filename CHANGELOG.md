@@ -4,6 +4,15 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [3.3.2] — 2026-08-02
+
+### Alterado
+
+- Artefato HTML do relatório estruturado agora é um **dashboard profissional**:
+  gauge de score (SVG), cards de indicadores (risco, CAC, MVP) e listas com
+  **ícones SVG (Lucide via CDN)** em vez de emojis.
+- Ícones Lucide em todo o layout (cabeçalho, seções, rodapé, botão de tema).
+
 ## [3.3.1] — 2026-08-02
 
 ### Adicionado

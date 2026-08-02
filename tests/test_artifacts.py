@@ -47,3 +47,31 @@ def test_escape_evita_injecao():
     html_doc = artifacts.gerar_html_artefato("T", md, "relatorio")
     assert "<script>alert" not in html_doc
     assert "&lt;script&gt;" in html_doc
+
+
+def test_dashboard_relatorio_com_modelo_tem_gauge_e_cards():
+    html_doc = artifacts.gerar_html_artefato(
+        "T", _modelo().to_markdown(), "relatorio", modelo=_modelo()
+    )
+    # Gauge de score
+    assert "stroke-dasharray" in html_doc
+    assert ">72<" in html_doc
+    # Ícones Lucide (não emojis)
+    assert "lucide" in html_doc
+    assert "shield-alert" in html_doc
+    assert "wallet" in html_doc
+    # Cards de métricas
+    assert "CAC estimado" in html_doc
+    assert "Nível de risco" in html_doc
+    # Seções
+    assert "Pontos fortes" in html_doc
+    assert "Pontos fracos" in html_doc
+    assert "Próximos passos" in html_doc
+
+
+def test_dashboard_escape_conteudo_do_modelo():
+    modelo = _modelo()
+    modelo.resumo = "<script>alert(1)</script>"
+    html_doc = artifacts.gerar_html_artefato("T", "", "relatorio", modelo=modelo)
+    assert "<script>alert" not in html_doc
+    assert "&lt;script&gt;" in html_doc

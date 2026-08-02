@@ -23,7 +23,9 @@ O usuário digita uma ideia de startup e o agente:
 4. **Salva tudo localmente** (SQLite) para histórico e consulta futura.
 
 Ao final de cada análise, o app pergunta se você quer **gerar um artefato em HTML**
-(Tailwind CSS, com tema claro/escuro) e abri-lo no navegador.
+profissional (Tailwind CSS + ícones SVG, tema claro/escuro) e abri-lo no navegador.
+O relatório estruturado é renderizado como um dashboard com **gauge de score**,
+**cards de indicadores** (risco, CAC, MVP) e listas com ícones.
 
 ---
 

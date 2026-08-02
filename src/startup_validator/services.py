@@ -113,7 +113,7 @@ def default_export_path(formato: str) -> str:
 EventParser = Callable[[Any], Optional[DetailedValidation]]
 
 
-def _to_model(content) -> Optional[DetailedValidation]:
+def to_validation_model(content) -> Optional[DetailedValidation]:
     """Converte conteúdo bruto em `DetailedValidation`, quando possível."""
     if isinstance(content, DetailedValidation):
         return content
@@ -128,6 +128,10 @@ def _to_model(content) -> Optional[DetailedValidation]:
         except Exception:
             return None
     return None
+
+
+# Alias interno para compatibilidade.
+_to_model = to_validation_model
 
 
 def _tool_name(evento: Any) -> str:
