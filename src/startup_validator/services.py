@@ -61,10 +61,25 @@ def refine_idea(agent: Agent, ideia: str, iteracao: int = 2) -> Tuple[str, Detai
 
 
 def _validate_once(agent: Agent, ideia: str) -> DetailedValidation:
+    """Valida a ideia e devolve o modelo `DetailedValidation`.
+
+    O agno nem sempre converte a resposta para o objeto estruturado
+    (parsing falha intermitentemente no DeepSeek). Por isso, tenta primeiro
+    o objeto direto e, se necessário, faz o parse do conteúdo bruto.
+    """
     run = agent.run(f"Valide esta ideia de startup: {ideia}. Pesquise mercado e concorrentes.", stream=False)
-    content = run.content
-    if isinstance(content, DetailedValidation):
-        return content
+    modelo = _to_model(run.content)
+    if modelo is not None:
+        return modelo
+
+    # Último recurso: procurar JSON estruturado nas mensagens da sessão.
+    from startup_validator import history
+
+    if run.session_id:
+        modelo = history.get_full_report_model(agent, run.session_id)
+        if modelo is not None:
+            return modelo
+
     raise ValueError("A resposta não pôde ser convertida em DetailedValidation.")
 
 
@@ -155,6 +170,43 @@ async def stream_validation(agent: Agent, ideia: str):
                         yield {"tipo": "done", "conteudo": modelo}
         else:
             yield {"tipo": "error", "erro": str(exc)}
+
+
+async def stream_free_text(agent: Agent, ideia: str):
+    """Executa uma chamada de texto livre com streaming, sem schema estruturado.
+
+    Diferente de `stream_validation`, este gerador **sempre** emite um evento
+    `done` ao final (mesmo que o conteúdo não seja estruturado), evitando que a
+    UI fique presa esperando um modelo que o parsing pode não produzir.
+    """
+    yield {"tipo": "start"}
+    deltas: list = []
+    final_content = None
+    try:
+        async for evento in agent.arun(ideia, stream=True):
+            nome = getattr(evento, "event", "")
+            if nome in ("RunContent", "RunIntermediateContent"):
+                c = getattr(evento, "content", None)
+                if isinstance(c, str) and c.strip():
+                    deltas.append(c)
+                    yield {"tipo": "content", "conteudo": c}
+            elif nome == "ReasoningContentDelta":
+                yield {"tipo": "thinking", "conteudo": getattr(evento, "reasoning_content", "")}
+            elif nome == "ToolCallStarted":
+                yield {"tipo": "tool_started", "conteudo": _tool_name(evento)}
+            elif nome == "ToolCallCompleted":
+                yield {"tipo": "tool_completed", "conteudo": _tool_name(evento)}
+            elif nome == "RunCompleted":
+                c = getattr(evento, "content", None)
+                if isinstance(c, str) and c.strip():
+                    final_content = c
+    except Exception as exc:
+        yield {"tipo": "error", "erro": str(exc)}
+        return
+
+    if not final_content:
+        final_content = "".join(deltas) or "Sem resposta."
+    yield {"tipo": "done", "conteudo": final_content}
 
 
 def _tool_name(evento: Any) -> str:

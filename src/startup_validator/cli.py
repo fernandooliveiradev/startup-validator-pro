@@ -78,16 +78,17 @@ async def main_app() -> None:
             if not ideia.strip():
                 continue
             ui.print_info("🎬 Revisando o pitch deck...")
-            stream = services.stream_validation(
-                analista,
+            comparador = agent_factory.build_free_text_agent()
+            stream = services.stream_free_text(
+                comparador,
                 f"Revise este pitch deck como um investidor-anjo. Aponte forças, falhas, "
                 f"lacunas e o que faltaria para investir: {ideia}",
             )
-            from startup_validator.stream import render_stream
+            from startup_validator.stream import render_free_text
 
-            modelo = await render_stream(stream, ui.console)
-            if modelo is not None:
-                ui.print_report(modelo.to_panel_text())
+            texto = await render_free_text(stream, ui.console)
+            if texto:
+                ui.print_report(texto)
 
         elif opcao == "4":
             historico = history.list_sessions(analista)

@@ -71,6 +71,56 @@ async def render_stream(stream: AsyncIterator[dict], console: Console) -> Option
     return final_model
 
 
+async def render_free_text(stream: AsyncIterator[dict], console: Console) -> str:
+    """Consome eventos de streaming de texto livre e retorna o texto final.
+
+    Nunca trava: exibe os deltas ao vivo e devolve o conteúdo final completo,
+    mesmo que a resposta não seja estruturada.
+    """
+    buffer: list = []
+    thinking: list = []
+    status: list = []
+    final_content = ""
+
+    with Live(console=console, refresh_per_second=12, transient=False) as live:
+        async for item in stream:
+            tipo = item.get("tipo")
+
+            if tipo == "start":
+                live.update(Text("🚀 Iniciando análise...", style="bold cyan"))
+            elif tipo == "thinking":
+                delta = item.get("conteudo", "")
+                if delta:
+                    thinking.append(delta)
+                    live.update(_render_state(buffer, thinking, status))
+            elif tipo in ("tool_started", "tool_completed"):
+                nome = item.get("conteudo", "ferramenta")
+                if tipo == "tool_started":
+                    status.append(f"🔍 Pesquisando via {nome}...")
+                else:
+                    status.append(f"✅ Pesquisa via {nome} concluída")
+                live.update(_render_state(buffer, thinking, status))
+            elif tipo == "info":
+                status.append(str(item.get("conteudo", "")))
+                live.update(_render_state(buffer, thinking, status))
+            elif tipo == "content":
+                c = item.get("conteudo")
+                if isinstance(c, str) and c.strip():
+                    buffer.append(c)
+                live.update(_render_state(buffer, thinking, status))
+            elif tipo == "done":
+                final_content = str(item.get("conteudo", ""))
+            elif tipo == "error":
+                console.print(f"[bold red]❌ {item.get('erro', 'Erro desconhecido')}[/bold red]")
+                return ""
+
+    if thinking:
+        console.print("\n[bold dim]🧠 Raciocínio:[/bold dim]")
+        console.print("".join(thinking)[:1200])
+
+    return final_content if final_content else "".join(buffer)
+
+
 def _render_state(buffer: list, thinking: list, status: list) -> Text:
     t = Text()
     if status:

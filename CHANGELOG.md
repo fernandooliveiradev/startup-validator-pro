@@ -4,6 +4,22 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [3.1.1] — 2026-08-02
+
+### Corrigido
+
+- **Refinamento iterativo quebrava quando o parsing do schema falhava**: `_validate_once`
+  agora usa estratégias múltiplas de parse (objeto, dict, JSON bruto e fallback pelas
+  mensagens da sessão) em vez de apenas exigir o objeto `DetailedValidation`.
+- **Pitch Deck Review travava** esperando um modelo estruturado que o DeepSeek nem sempre
+  produz: agora usa um agente de texto livre com streaming que sempre termina, e gera
+  resposta em texto corrido.
+
+### Alterado
+
+- README reescrito em português focado em tech recruiters: o que é, por que agno,
+  arquitetura do agente e como rodar no desktop.
+
 ## [3.1.0] — 2026-08-02
 
 ### Adicionado

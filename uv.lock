@@ -725,7 +725,7 @@ wheels = [
 
 [[package]]
 name = "startup-validator-pro"
-version = "3.1.0"
+version = "3.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "agno", extra = ["openai", "sqlite", "tavily"] },
