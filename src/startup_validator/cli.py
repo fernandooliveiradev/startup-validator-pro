@@ -77,12 +77,13 @@ async def main_app() -> None:
             ideia = ui.ask_idea()
             if not ideia.strip():
                 continue
-            ui.print_info("🎬 Revisando o pitch deck...")
+            ui.print_info("🎬 Revisando o pitch...")
             comparador = agent_factory.build_free_text_agent()
             stream = services.stream_free_text(
                 comparador,
-                f"Revise este pitch deck como um investidor-anjo. Aponte forças, falhas, "
-                f"lacunas e o que faltaria para investir: {ideia}",
+                f"O usuário descreveu a ideia de startup abaixo em texto. Revise como um "
+                f"investidor-anjo avaliaria esse pitch: aponte forças, falhas, lacunas e o "
+                f"que faltaria para investir.\n\nDescrição: {ideia}",
             )
             from startup_validator.stream import render_free_text
 
