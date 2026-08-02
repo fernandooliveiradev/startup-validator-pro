@@ -4,6 +4,7 @@ import asyncio
 import sys
 
 from startup_validator import commands, config, db, ui
+from startup_validator.logging_setup import configurar_logging
 
 
 def _validate_env() -> None:
@@ -25,6 +26,8 @@ def _build_agent():
 async def main_app() -> None:
     _validate_env()
     analista = _build_agent()
+    # Configura o logging APÓS importar o agno (o agno redefine o nível no import).
+    configurar_logging()
 
     # Mapeia opção -> handler. Cada comando é isolado em `commands`.
     # Handlers podem ser síncronos ou assíncronos; `_run` normaliza ambos.

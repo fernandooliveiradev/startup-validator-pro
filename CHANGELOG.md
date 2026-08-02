@@ -4,6 +4,22 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [3.4.0] — 2026-08-02
+
+### Adicionado
+
+- **Instrução de JSON mode no agente estruturado**: conforme a documentação do DeepSeek,
+  inclui a palavra "json" e um exemplo do formato esperado no system prompt. Isso orienta
+  o modelo a gerar JSON válido (o DeepSeek exige isso com `response_format=json_object`).
+- **`logging_setup.py`**: silencia os warnings internos de parsing do agno (ruído de
+  streaming que tentava validar deltas parciais de JSON) e o log de transporte HTTP
+  (`httpx`). Erros reais continuam visíveis.
+
+### Corrigido
+
+- Tela poluída com warnings de parsing (que pareciam falha, mas eram ruído do agno durante
+  o streaming).
+
 ## [3.3.2] — 2026-08-02
 
 ### Alterado

@@ -39,6 +39,20 @@ def test_instrucoes_estruturadas_tem_persona():
     assert prompts.AGENTE_ESTRUTURADO_INSTRUCOES[0] == prompts.INVESTIDOR_PERSONA
 
 
+def test_instrucoes_estruturadas_incluem_json_mode():
+    # O DeepSeek exige a palavra "json" + exemplo no prompt quando usa
+    # response_format={'type':'json_object'}.
+    instrucoes = "\n".join(prompts.AGENTE_ESTRUTURADO_INSTRUCOES).lower()
+    assert "json" in instrucoes
+    assert "pontos_fortes" in instrucoes
+
+
+def test_json_mode_exemplo_tem_campos_do_schema():
+    exemplo = prompts.JSON_MODE_EXEMPLO
+    for campo in ("resumo", "pontos_fortes", "pontos_fracos", "analise_mercado", "score", "referencias"):
+        assert campo in exemplo
+
+
 def test_help_text_explica_opcoes():
     assert "Validar ideia" in prompts.HELP_TEXT
     assert "Pitch Deck Review" in prompts.HELP_TEXT

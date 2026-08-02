@@ -12,12 +12,33 @@ USAR_TAVILY = (
     "e concorrentes antes de responder."
 )
 
+# Exemplo do JSON que o modelo deve produzir (orienta o DeepSeek, que usa
+# response_format={'type':'json_object'} e exige a palavra "json" + exemplo).
+JSON_MODE_EXEMPLO = """
+Responda APENAS com um objeto JSON válido, sem texto antes ou depois, seguindo
+exatamente este formato (substitua os valores de exemplo):
+
+{
+  "resumo": "Resumo objetivo da ideia.",
+  "pontos_fortes": ["Vantagem 1", "Vantagem 2"],
+  "pontos_fracos": ["Risco 1", "Risco 2"],
+  "analise_mercado": "Análise de mercado com dados reais pesquisados.",
+  "score": 70,
+  "nivel_risco": "médio",
+  "cac_estimado": "R$ 100-200 por cliente",
+  "mvp_minimo": "O que construir e como validar.",
+  "proximos_passos": ["Ação 1", "Ação 2"],
+  "referencias": ["https://fonte1", "https://fonte2"]
+}
+"""
+
 # Instruções do agente estruturado (produz relatório no formato DetailedValidation).
 AGENTE_ESTRUTURADO_INSTRUCOES = [
     INVESTIDOR_PERSONA,
     USAR_TAVILY,
     "Responda exclusivamente no formato estruturado solicitado, em português.",
     "Seja objetivo, com argumentos claros e recomendações acionáveis.",
+    JSON_MODE_EXEMPLO,
 ]
 
 # Instruções do agente de texto livre (comentário/avaliação em texto corrido).
